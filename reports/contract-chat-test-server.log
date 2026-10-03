@@ -1,0 +1,9 @@
+
+> bizflow-ai@0.1.0 start
+> next start -H 127.0.0.1 -p 3015
+
+▲ Next.js 16.3.8
+- Local:         http://127.0.0.1:3015
+- Network:       http://127.0.0.1:3015
+✓ Ready in 230ms
+✓ Running next.config.ts took 58ms

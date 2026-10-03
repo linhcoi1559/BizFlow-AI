@@ -1,0 +1,469 @@
+// Generated from prisma/schema.prisma by scripts/prepare-postgres-schema.mjs.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ClientStatus {
+  active
+  inactive
+  archived
+}
+
+enum ProjectStatus {
+  draft
+  planning
+  active
+  paused
+  completed
+  cancelled
+}
+
+enum ActivityType {
+  client_created
+  client_updated
+  project_created
+  project_updated
+  company_profile_updated
+  ai_workflow_created
+  template_created
+  template_version_created
+  document_created
+  document_updated
+  document_submitted
+  document_approved
+  plan_created
+  plan_updated
+  plan_activated
+  task_updated
+  payment_updated
+  reminder_created
+  reminder_completed
+}
+
+enum DocumentType {
+  proposal
+  quotation
+  contract
+  other
+}
+
+enum DocumentStatus {
+  draft
+  in_review
+  approved
+  archived
+}
+
+enum TemplateStatus {
+  active
+  inactive
+}
+
+enum PlanStatus {
+  draft
+  active
+  completed
+  archived
+}
+
+enum PlanItemStatus {
+  pending
+  active
+  completed
+  blocked
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  blocked
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum PaymentStatus {
+  scheduled
+  invoiced
+  paid
+  overdue
+  waived
+}
+
+enum ReminderStatus {
+  pending
+  completed
+  dismissed
+}
+
+enum ReminderType {
+  task
+  payment
+  milestone
+  general
+}
+
+enum MembershipRole {
+  owner
+  admin
+  manager
+  finance
+  reviewer
+  member
+}
+
+enum MembershipStatus {
+  invited
+  active
+  suspended
+}
+
+model Organization {
+  id             String                   @id @default(cuid())
+  name           String
+  companyProfile CompanyProfile?
+  clients        Client[]
+  projects       Project[]
+  templates      Template[]
+  documents      Document[]
+  plans          Plan[]
+  tasks          Task[]
+  payments       PaymentMilestone[]
+  reminders      Reminder[]
+  activities     Activity[]
+  memberships    OrganizationMembership[]
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  @@index([name])
+}
+
+model User {
+  id          String                   @id @default(cuid())
+  authUserId  String?                  @unique
+  email       String                   @unique
+  displayName String?
+  memberships OrganizationMembership[]
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@index([email])
+}
+
+model OrganizationMembership {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           MembershipRole   @default(member)
+  status         MembershipStatus @default(invited)
+  joinedAt       DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([organizationId, status, role])
+  @@index([userId, status])
+}
+
+model CompanyProfile {
+  id                  String       @id @default(cuid())
+  organizationId      String       @unique
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  companyName         String
+  taxCode             String?
+  address             String?
+  representativeName  String?
+  representativeTitle String?
+  email               String?
+  phone               String?
+  website             String?
+  bankName            String?
+  bankAccount         String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+model Client {
+  id                  String             @id @default(cuid())
+  organizationId      String
+  organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  companyName         String
+  taxCode             String?
+  address             String?
+  representativeName  String?
+  representativeTitle String?
+  email               String?
+  phone               String?
+  website             String?
+  notes               String?
+  status              ClientStatus       @default(active)
+  projects            Project[]
+  documents           Document[]
+  plans               Plan[]
+  tasks               Task[]
+  payments            PaymentMilestone[]
+  reminders           Reminder[]
+  activities          Activity[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([organizationId, status])
+  @@index([companyName])
+}
+
+model Project {
+  id                 String             @id @default(cuid())
+  organizationId     String
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId           String
+  client             Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  name               String
+  description        String?
+  serviceType        String?
+  status             ProjectStatus      @default(draft)
+  startDate          DateTime?
+  endDate            DateTime?
+  totalValue         Decimal            @default(0)
+  monthlyFee         Decimal?
+  durationMonths     Int?
+  currency           String             @default("VND")
+  ownerName          String?
+  progress           Int                @default(0)
+  kpi                String?
+  sourceRequest      String?
+  createdWithAi      Boolean            @default(false)
+  aiProvider         String?
+  aiModel            String?
+  suggestedDocuments Json?
+  documents          Document[]
+  plan               Plan?
+  tasks              Task[]
+  payments           PaymentMilestone[]
+  reminders          Reminder[]
+  activities         Activity[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([organizationId, status])
+  @@index([clientId])
+  @@index([endDate])
+}
+
+model Template {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  templateKey    String
+  name           String
+  description    String?
+  type           DocumentType
+  status         TemplateStatus @default(active)
+  version        Int            @default(1)
+  isCurrent      Boolean        @default(true)
+  changeNote     String?
+  content        Json
+  documents      Document[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([organizationId, templateKey, version])
+  @@index([organizationId, type, isCurrent])
+}
+
+model Document {
+  id              String            @id @default(cuid())
+  organizationId  String
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  templateId      String?
+  template        Template?         @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  referenceNumber String
+  title           String
+  type            DocumentType
+  status          DocumentStatus    @default(draft)
+  currentVersion  Int               @default(1)
+  approvedAt      DateTime?
+  approvedByName  String?
+  versions        DocumentVersion[]
+  sourcePlans     Plan[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([organizationId, referenceNumber])
+  @@index([organizationId, status, updatedAt])
+  @@index([projectId, type])
+  @@index([clientId])
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  content    Json
+  changeNote String?
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, version])
+  @@index([documentId, createdAt])
+}
+
+model Plan {
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId         String
+  client           Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId        String       @unique
+  project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceDocumentId String?
+  sourceDocument   Document?    @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  title            String
+  status           PlanStatus   @default(draft)
+  notes            String?
+  activatedAt      DateTime?
+  items            PlanItem[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([organizationId, status])
+  @@index([clientId])
+  @@index([sourceDocumentId])
+}
+
+model PlanItem {
+  id             String            @id @default(cuid())
+  planId         String
+  plan           Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  ownerName      String?
+  startDate      DateTime?
+  dueDate        DateTime?
+  priority       TaskPriority      @default(medium)
+  status         PlanItemStatus    @default(pending)
+  paymentPercent Decimal           @default(0)
+  position       Int
+  task           Task?
+  payment        PaymentMilestone?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([planId, position])
+  @@index([planId, status])
+  @@index([dueDate])
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  planItemId     String?      @unique
+  planItem       PlanItem?    @relation(fields: [planItemId], references: [id], onDelete: SetNull)
+  title          String
+  description    String?
+  ownerName      String?
+  priority       TaskPriority @default(medium)
+  status         TaskStatus   @default(todo)
+  startDate      DateTime?
+  dueDate        DateTime?
+  completedAt    DateTime?
+  reminders      Reminder[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, status, dueDate])
+  @@index([projectId, status])
+  @@index([clientId])
+}
+
+model PaymentMilestone {
+  id              String        @id @default(cuid())
+  organizationId  String
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  planItemId      String?       @unique
+  planItem        PlanItem?     @relation(fields: [planItemId], references: [id], onDelete: SetNull)
+  referenceNumber String
+  title           String
+  amount          Decimal
+  currency        String        @default("VND")
+  dueDate         DateTime?
+  status          PaymentStatus @default(scheduled)
+  invoiceNumber   String?
+  paidAt          DateTime?
+  reminders       Reminder[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([organizationId, referenceNumber])
+  @@index([organizationId, status, dueDate])
+  @@index([projectId, status])
+  @@index([clientId])
+}
+
+model Reminder {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId           String
+  client             Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId          String
+  project            Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId             String?
+  task               Task?             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  paymentMilestoneId String?
+  paymentMilestone   PaymentMilestone? @relation(fields: [paymentMilestoneId], references: [id], onDelete: Cascade)
+  type               ReminderType
+  title              String
+  dueAt              DateTime
+  status             ReminderStatus    @default(pending)
+  completedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([organizationId, status, dueAt])
+  @@index([projectId, status])
+  @@index([taskId])
+  @@index([paymentMilestoneId])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type           ActivityType
+  message        String
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([projectId, createdAt])
+  @@index([clientId, createdAt])
+}

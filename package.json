@@ -1,26 +1,56 @@
 {
-  "name": "bizflow-ai-setup",
+  "name": "bizflow-ai",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:security": "tsx --test tests/auth-mode.test.ts tests/authorization.test.ts tests/postgres-rls.test.ts tests/database-safety.test.ts tests/safe-return-path.test.ts",
+    "test:tenant": "tsx scripts/verify-tenant-isolation.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:bootstrap": "tsx prisma/bootstrap.ts",
+    "db:studio": "prisma studio",
+    "db:postgres:prepare": "node scripts/prepare-postgres-schema.mjs",
+    "db:postgres:generate": "npm run db:postgres:prepare && prisma generate --config prisma.postgresql.config.ts",
+    "db:postgres:deploy": "npm run db:postgres:prepare && prisma migrate deploy --config prisma.postgresql.config.ts",
+    "test:supabase": "tsx scripts/verify-supabase.ts",
+    "test:workflows": "tsx scripts/verify-local-workflows.ts",
+    "test:ai": "tsx --test tests/chatgpt-contract.test.ts tests/contract-draft.test.ts",
+    "test:ai:workflows": "tsx scripts/verify-ai-workflows.ts"
   },
   "dependencies": {
-    "next": "16.3.7",
+    "@google/genai": "^2.25.0",
+    "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "clsx": "^2.1.1",
+    "docx": "^9.8.1",
+    "jose": "^6.2.12",
+    "lucide-react": "^1.49.0",
+    "next": "16.3.8",
+    "pdfmake": "^0.3.11",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pdfmake": "^0.3.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^18.0.5",
     "eslint": "^9",
-    "eslint-config-next": "16.3.7",
+    "eslint-config-next": "16.3.8",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

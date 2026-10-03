@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,7 +23,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
@@ -28,7 +34,31 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    ".next-supabase-live/types/**/*.ts",
+    ".next-supabase-live/dev/types/**/*.ts",
+    ".next-manual-test/types/**/*.ts",
+    ".next-manual-test/dev/types/**/*.ts",
+    ".next-vietnamese-verified/types/**/*.ts",
+    ".next-vietnamese-verified/dev/types/**/*.ts",
+    ".next-supabase-vietnamese/types/**/*.ts",
+    ".next-supabase-vietnamese/dev/types/**/*.ts",
+    ".next-phase5-demo/types/**/*.ts",
+    ".next-phase5-demo/dev/types/**/*.ts",
+    ".next-phase5-verified/types/**/*.ts",
+    ".next-phase5-verified/dev/types/**/*.ts",
+    ".next-ai-demo/types/**/*.ts",
+    ".next-ai-demo/dev/types/**/*.ts",
+    ".next-ai-verified/types/**/*.ts",
+    ".next-ai-verified/dev/types/**/*.ts",
+    ".next-autosave-verified/types/**/*.ts",
+    ".next-autosave-verified/dev/types/**/*.ts",
+    ".next-contract-assistant-verified/types/**/*.ts",
+    ".next-contract-assistant-verified/dev/types/**/*.ts",
+    ".next-contract-chat-verified/types/**/*.ts",
+    ".next-contract-chat-verified/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
